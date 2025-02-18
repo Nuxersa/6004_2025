@@ -29,8 +29,12 @@ import com.pathplanner.lib.path.PathPlannerPath;
 
 import frc.robot.util.LimelightHelpers;
 
+//Team Subsystems
+import frc.robot.subsystems.Elevator;
 
 public class RobotContainer {
+    public final Elevator elevatorSubsystem = new Elevator();
+
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
@@ -43,7 +47,10 @@ public class RobotContainer {
 
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
+    //driver
     private final CommandXboxController joystick = new CommandXboxController(0);
+    //op
+    private final CommandXboxController op = new CommandXboxController(1);
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
@@ -65,6 +72,7 @@ public class RobotContainer {
     private final SlewRateLimiter m_xspeedLimiter = new SlewRateLimiter(3);
     private final SlewRateLimiter m_yspeedLimiter = new SlewRateLimiter(3);
     private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(3);
+    private final SlewRateLimiter m_elev = new SlewRateLimiter(4);
 
     private void configureBindings() {
         // Note that X is defined as forward according to WPILib convention,
@@ -92,6 +100,9 @@ public class RobotContainer {
 
         // reset the field-centric heading on left bumper press
         joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+        
+        // move elevator
+        op.rightStick().whileTrue(elevatorSubsystem.moveElevator(m_elev.calculate(op.getRightX()))); // might need lambda?
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }
