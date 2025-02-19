@@ -31,12 +31,15 @@ import frc.robot.util.LimelightHelpers;
 
 //Team Subsystems
 import frc.robot.subsystems.Elevator;
+import frc.robot.commands.ElevatorDownCommand;
+import frc.robot.commands.ElevatorUpCommand;
 
 public class RobotContainer {
     public final Elevator elevatorSubsystem = new Elevator();
 
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+    
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
@@ -102,7 +105,8 @@ public class RobotContainer {
         joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
         
         // move elevator
-        op.rightStick().whileTrue(elevatorSubsystem.moveElevator(m_elev.calculate(op.getRightX()))); // might need lambda?
+        op.leftTrigger(.2).whileTrue(new ElevatorUpCommand(elevatorSubsystem));
+        op.rightTrigger(.2).whileTrue(new ElevatorDownCommand(elevatorSubsystem));
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }

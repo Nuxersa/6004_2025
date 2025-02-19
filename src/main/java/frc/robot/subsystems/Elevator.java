@@ -1,87 +1,58 @@
-/*----------------------------------------------------------------------------*/
-/* Copyright (c) 2017-2018 FIRST. All Rights Reserved.                        */
-/* Open Source Software - may be modified and shared by FRC teams. The code   */
-/* must be accompanied by the FIRST BSD license file in the root directory of */
-/* the project.                                                               */
-/*----------------------------------------------------------------------------*/
-
 package frc.robot.subsystems;
 
-
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
-import frc.robot.constants;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.constants.ElevatorConstants;;
 
-/**
- * An example subsystem.  You can replace me with your own Subsystem.
- */
 public class Elevator extends SubsystemBase {
-  // Put methods for controlling this subsystem
-  // here. Call these from Commands.
-  SparkMax leftLeader;
-  //SparkMax leftFollower;
 
-
-  public Elevator() {
-    leftLeader = new SparkMax(constants.LIFT_MAIN, MotorType.kBrushless);
-    //leftFollower = new SparkMax(2, MotorType.kBrushless);  
-    /*
-     * Create new SPARK MAX configuration objects. These will store the
-     * configuration parameters for the SPARK MAXes that we will set below.
+    private final SparkMax elevatorMotor;
+    private final SparkMax elevatorMotorFollow;
+    
+    /**
+     * This subsytem that controls the arm.
      */
-    SparkMaxConfig globalConfig = new SparkMaxConfig();
-    //SparkMaxConfig leftFollowerConfig = new SparkMaxConfig();
-    
-    /*
-     * Set parameters that will apply to all SPARKs. We will also use this as
-     * the left leader config.
+    public Elevator () {
+
+    // Set up the arm motor as a brushed motor
+    elevatorMotor = new SparkMax(ElevatorConstants.LIFT_MAIN, MotorType.kBrushless);
+    elevatorMotorFollow = new SparkMax(ElevatorConstants.LIFT_MAIN, MotorType.kBrushless);
+
+    // Set can timeout. Because this project only sets parameters once on
+    // construction, the timeout can be long without blocking robot operation. Code
+    // which sets or gets parameters during operation may need a shorter timeout.
+    elevatorMotor.setCANTimeout(250);
+    elevatorMotorFollow.setCANTimeout(250);
+
+    // Create and apply configuration for arm motor. Voltage compensation helps
+    // the arm behave the same as the battery
+    // voltage dips. The current limit helps prevent breaker trips or burning out
+    // the motor in the event the arm stalls.
+    SparkMaxConfig elevatorConfig = new SparkMaxConfig();
+    elevatorConfig.voltageCompensation(10);
+    elevatorConfig.smartCurrentLimit(ElevatorConstants.LIFT_CUR_LMT);
+    elevatorConfig.idleMode(IdleMode.kBrake);
+    elevatorMotor.configure(elevatorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    elevatorMotorFollow.configure(elevatorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    }
+
+    @Override
+    public void periodic() {
+    }
+    /** 
+     * This is a method that makes the arm move at your desired speed
+     *  Positive values make it spin forward and negative values spin it in reverse
+     * 
+     * @param speed motor speed from -1.0 to 1, with 0 stopping it
      */
-    globalConfig
-        .smartCurrentLimit(50)
-        .idleMode(IdleMode.kBrake);
-    
-    // Apply the global config and set the leader SPARK for follower mode
-    //leftFollowerConfig
-    //    .apply(globalConfig)
-    //    .follow(leftLeader);
-
-    // Apply the global config and set the leader SPARK for follower mode
-    //leftFollowerConfig
-    //    .apply(globalConfig)
-    //    .follow(leftLeader);
-    
-    /*
-     * Apply the configuration to the SPARKs.
-     *
-     * kResetSafeParameters is used to get the SPARK MAX to a known state. This
-     * is useful in case the SPARK MAX is replaced.
-     *
-     * kPersistParameters is used to ensure the configuration is not lost when
-     * the SPARK MAX loses power. This is useful for power cycles that may occur
-     * mid-operation.
-     */
-    leftLeader.configure(globalConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-    //leftFollower.configure(leftFollowerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-    
-
-  }
-
-
-  public Command moveElevator(double speed) {
-    
-    return runOnce(
-            () -> { 
-              leftLeader.set(speed);
-        });
-
-  } 
-
-
+    public void moveElevator(double speed){
+        elevatorMotor.set(speed);
+        elevatorMotorFollow.set(-speed);
+    }
 }
