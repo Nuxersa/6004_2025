@@ -22,7 +22,7 @@ public class Elevator extends SubsystemBase {
 
     // Set up the arm motor as a brushed motor
     elevatorMotor = new SparkMax(ElevatorConstants.LIFT_MAIN, MotorType.kBrushless);
-    elevatorMotorFollow = new SparkMax(ElevatorConstants.LIFT_MAIN, MotorType.kBrushless);
+    elevatorMotorFollow = new SparkMax(ElevatorConstants.LIFT_FOLLOW, MotorType.kBrushless);
 
     // Set can timeout. Because this project only sets parameters once on
     // construction, the timeout can be long without blocking robot operation. Code
