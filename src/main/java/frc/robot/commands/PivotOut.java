@@ -6,12 +6,12 @@ package frc.robot.commands;
 
 
 import frc.robot.constants.IntakeConstants;
-import frc.robot.subsystems.IntakeSub;
+import frc.robot.subsystems.PivotSub;
 import edu.wpi.first.wpilibj2.command.Command;
 
 /** An liftUpCommand that uses an lift subsystem. */
-public class IntakeOut extends Command {
-  private final IntakeSub m_intake;
+public class PivotOut extends Command {
+  private final PivotSub m_intake;
 
   /**
    * Powers the lift up, when finished passively holds the lift up.
@@ -21,7 +21,7 @@ public class IntakeOut extends Command {
    *
    * @param lift The subsystem used by this command.
    */
-  public IntakeOut(IntakeSub input) {
+  public PivotOut(PivotSub input) {
     m_intake = input;
     addRequirements(input);
   }
@@ -33,7 +33,7 @@ public class IntakeOut extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    m_intake.moveIntake(-IntakeConstants.INTAKE_SPEED);
+    m_intake.movePivot(-IntakeConstants.INTAKE_SPEED);
   }
 
   // Called once the command ends or is interrupted.
@@ -41,7 +41,7 @@ public class IntakeOut extends Command {
   // When the next command is caled it will override this command
   @Override
   public void end(boolean interrupted) {
-    m_intake.moveIntake(IntakeConstants.INTAKE_SPEED_HOLD);
+    m_intake.movePivot(IntakeConstants.INTAKE_SPEED_HOLD);
   }
 
   // Returns true when the command should end.

@@ -32,15 +32,20 @@ import frc.robot.util.LimelightHelpers;
 
 //Team Subsystems
 import frc.robot.subsystems.Elevator;
-import frc.robot.subsystems.IntakeSub;
+import frc.robot.subsystems.PivotSub;
+import frc.robot.subsystems.GrabSub;
 import frc.robot.commands.ElevatorDownCommand;
 import frc.robot.commands.ElevatorUpCommand;
-import frc.robot.commands.IntakeIn;
-import frc.robot.commands.IntakeOut;
+import frc.robot.commands.PivotIn;
+import frc.robot.commands.PivotOut;
+import frc.robot.commands.GrabIn;
+import frc.robot.commands.GrabOut;
+
 
 public class RobotContainer {
     public final Elevator elevatorSubsystem = new Elevator();
-    public final IntakeSub intakeSubsystem = new IntakeSub();
+    public final PivotSub pivotSubsystem = new PivotSub();
+    public final GrabSub grabSubsystem = new GrabSub();
 
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
@@ -107,11 +112,18 @@ public class RobotContainer {
         joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
         // reset the field-centric heading on left bumper press
-        joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+        joystick.y().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
         
-        // move intake
-        op.a().whileTrue(new IntakeIn(intakeSubsystem));
-        op.b().whileTrue(new IntakeOut(intakeSubsystem));
+        // move pivot
+        op.povDown().whileTrue(new PivotIn(pivotSubsystem));
+        op.povUp().whileTrue(new PivotOut(pivotSubsystem));
+
+
+        //move Grab!
+        op.x().whileTrue(new GrabIn(grabSubsystem));
+        op.y().whileTrue(new GrabOut(grabSubsystem));
+    
+
 
         // move elevator
         op.leftTrigger(.2).whileTrue(new ElevatorUpCommand(elevatorSubsystem));

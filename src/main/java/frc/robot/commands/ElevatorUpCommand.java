@@ -7,6 +7,7 @@ package frc.robot.commands;
 import frc.robot.constants.ElevatorConstants;
 import frc.robot.subsystems.Elevator;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
 /** An liftUpCommand that uses an lift subsystem. */
 public class ElevatorUpCommand extends Command {
@@ -25,6 +26,8 @@ public class ElevatorUpCommand extends Command {
     addRequirements(lift);
   }
 
+    private final CommandXboxController op = new CommandXboxController(1);
+
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {}
@@ -32,7 +35,7 @@ public class ElevatorUpCommand extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    m_elevator.moveElevator(ElevatorConstants.LIFT_SPEED_UP);
+    m_elevator.moveElevator(ElevatorConstants.LIFT_SPEED_UP * op.getLeftTriggerAxis());
   }
 
   // Called once the command ends or is interrupted.

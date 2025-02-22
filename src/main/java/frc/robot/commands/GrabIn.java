@@ -6,12 +6,12 @@ package frc.robot.commands;
 
 
 import frc.robot.constants.IntakeConstants;
-import frc.robot.subsystems.IntakeSub;
+import frc.robot.subsystems.GrabSub;
 import edu.wpi.first.wpilibj2.command.Command;
 
 /** An liftUpCommand that uses an lift subsystem. */
-public class IntakeIn extends Command {
-  private final IntakeSub m_intake;
+public class GrabIn extends Command {
+  private final GrabSub m_grab;
 
   /**
    * Powers the lift up, when finished passively holds the lift up.
@@ -21,8 +21,8 @@ public class IntakeIn extends Command {
    *
    * @param lift The subsystem used by this command.
    */
-  public IntakeIn(IntakeSub input) {
-    m_intake = input;
+  public GrabIn(GrabSub input) {
+    m_grab = input;
     addRequirements(input);
   }
 
@@ -33,7 +33,7 @@ public class IntakeIn extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    m_intake.moveIntake(IntakeConstants.INTAKE_SPEED);
+    m_grab.moveGrab(IntakeConstants.INTAKE_SPEED);
   }
 
   // Called once the command ends or is interrupted.
@@ -41,7 +41,7 @@ public class IntakeIn extends Command {
   // When the next command is caled it will override this command
   @Override
   public void end(boolean interrupted) {
-    m_intake.moveIntake(IntakeConstants.INTAKE_SPEED_HOLD);
+    m_grab.moveGrab(IntakeConstants.INTAKE_SPEED_HOLD);
   }
 
   // Returns true when the command should end.
