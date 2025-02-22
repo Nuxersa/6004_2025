@@ -35,6 +35,7 @@ import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.PivotSub;
 import frc.robot.subsystems.GrabSub;
 import frc.robot.commands.ElevatorDownCommand;
+import frc.robot.commands.ElevatorJiggleCommand;
 import frc.robot.commands.ElevatorUpCommand;
 import frc.robot.commands.PivotIn;
 import frc.robot.commands.PivotOut;
@@ -92,10 +93,11 @@ public class RobotContainer {
         // and Y is defined as to the left according to WPILib convention.
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
+
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-m_xspeedLimiter.calculate(joystick.getLeftY()) * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-m_yspeedLimiter.calculate(joystick.getLeftX()) * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(-m_rotLimiter.calculate(joystick.getRightX()) * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                drive.withVelocityX(-m_xspeedLimiter.calculate(joystick.getLeftY()) * MaxSpeed * 0.5) // Drive forward with negative Y (forward)
+                    .withVelocityY(-m_yspeedLimiter.calculate(joystick.getLeftX()) * MaxSpeed * 0.5) // Drive left with negative X (left)
+                    .withRotationalRate(-m_rotLimiter.calculate(joystick.getRightX()) * MaxAngularRate * 0.5) // Drive counterclockwise with negative X (left)
             )
         );
 
@@ -126,8 +128,10 @@ public class RobotContainer {
 
 
         // move elevator
-        op.leftTrigger(.2).whileTrue(new ElevatorUpCommand(elevatorSubsystem));
-        op.rightTrigger(.2).whileTrue(new ElevatorDownCommand(elevatorSubsystem));
+        op.leftTrigger(.05).whileTrue(new ElevatorUpCommand(elevatorSubsystem));
+        op.rightTrigger(.05).whileTrue(new ElevatorDownCommand(elevatorSubsystem));
+
+        op.b().whileTrue(new ElevatorJiggleCommand(elevatorSubsystem));
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }

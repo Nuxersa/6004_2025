@@ -18,12 +18,9 @@ import com.ctre.phoenix6.hardware.CANrange;
 
 public class GrabSub extends SubsystemBase {
     TalonFX intakeGrab;
- // Constants used in CANrange construction
- final int kCANrangeId = 0;
- 
- // Construct the CANrange
- CANrange CANrange;
-    
+    double CANrangeDistance;
+
+
     /**
      * This subsytem that controls the arm.
      */
@@ -36,10 +33,26 @@ public class GrabSub extends SubsystemBase {
         intakeGrabConfiguration.CurrentLimits.SupplyCurrentLimit = 55;
         intakeGrabConfiguration.CurrentLimits.SupplyCurrentLimitEnable = true;
 
-    }
+        //set up CANrange with an Id of 1 and no canbus specifications
+        CANrange CANrange = new CANrange(1);
+        CANrangeConfiguration CANrangeConfigs = new CANrangeConfiguration();
+        CANrangeDistance = CANrange.getDistance().getValueAsDouble();
+    } 
 
     @Override
     public void periodic() {
+        int cantime = 0;
+       CANrange CANrange = new CANrange(1);
+       CANrangeConfiguration CANrangeConfigs = new CANrangeConfiguration();
+       CANrangeDistance = CANrange.getDistance().getValueAsDouble();
+       boolean CANdetects = CANrange.getIsDetected().getValue();
+       System.out.println(CANrangeDistance);
+       if (CANdetects && CANrangeDistance < .025 && CANrangeDistance > .015) {
+        intakeGrab.set(-0.25);
+       } else {
+        intakeGrab.set(0);
+        cantime = 0;
+       }
     }
     /** 
      * This is a method that makes the arm move at your desired speed
@@ -49,19 +62,6 @@ public class GrabSub extends SubsystemBase {
      */
     public void moveGrab(double speed){
         intakeGrab.set(speed);
-        CANrange = new CANrange(kCANrangeId);
-        
-        // Configure the CANrange for basic use
-        CANrangeConfiguration configs = new CANrangeConfiguration();
-        
-        // Write these configs to the CANrange
-        CANrangeConfigurator configurator = CANrange.getConfigurator();
-        configurator.apply(configs);
-        
-        // Get Distance
-        var distance = CANrange.getDistance();
-        
-        // Refresh and print these values
-        System.out.println("Distance is " + distance.refresh().toString());
+
     }
 }
