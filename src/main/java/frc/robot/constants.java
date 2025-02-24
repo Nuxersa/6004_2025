@@ -13,8 +13,8 @@ public class constants {
         public static final double LIFT_MOTOR_VOLTAGE_COMP = 10;
         public static final double LIFT_SPEED_DOWN = 0.5;
         public static final double LIFT_SPEED_UP = -0.5;
-        public static final double LIFT_HOLD_DOWN = 0;
-        public static final double LIFT_HOLD_UP = 0;
+        public static final double LIFT_HOLD_DOWN = (0.5 * 0.05);
+        public static final double LIFT_HOLD_UP = (0.5 * 0.05);
       }
    
     public final class TalonFXConstants {

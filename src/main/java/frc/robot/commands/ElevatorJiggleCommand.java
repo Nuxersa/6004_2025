@@ -42,7 +42,7 @@ public class ElevatorJiggleCommand extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    m_elevator.moveElevator((Math.sin(System.currentTimeMillis() * 2)) / 4);
+    m_elevator.moveElevator((Math.sin(System.currentTimeMillis() / 1)) / 2);
   }
 
   // Called once the command ends or is interrupted.

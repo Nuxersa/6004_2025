@@ -46,7 +46,6 @@ public class GrabSub extends SubsystemBase {
        CANrangeConfiguration CANrangeConfigs = new CANrangeConfiguration();
        CANrangeDistance = CANrange.getDistance().getValueAsDouble();
        boolean CANdetects = CANrange.getIsDetected().getValue();
-       System.out.println(CANrangeDistance);
        if (CANdetects && CANrangeDistance < .025 && CANrangeDistance > .015) {
         intakeGrab.set(-0.25);
        } else {

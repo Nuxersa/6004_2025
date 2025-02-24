@@ -95,9 +95,9 @@ public class RobotContainer {
             // Drivetrain will execute this command periodically
 
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-m_xspeedLimiter.calculate(joystick.getLeftY()) * MaxSpeed * 0.5) // Drive forward with negative Y (forward)
-                    .withVelocityY(-m_yspeedLimiter.calculate(joystick.getLeftX()) * MaxSpeed * 0.5) // Drive left with negative X (left)
-                    .withRotationalRate(-m_rotLimiter.calculate(joystick.getRightX()) * MaxAngularRate * 0.5) // Drive counterclockwise with negative X (left)
+                drive.withVelocityX(-m_xspeedLimiter.calculate(joystick.getLeftY()) * MaxSpeed * 1) // Drive forward with negative Y (forward)
+                    .withVelocityY(-m_yspeedLimiter.calculate(joystick.getLeftX()) * MaxSpeed * 1) // Drive left with negative X (left)
+                    .withRotationalRate(-m_rotLimiter.calculate(joystick.getRightX()) * MaxAngularRate * 1) // Drive counterclockwise with negative X (left)
             )
         );
 
@@ -134,54 +134,62 @@ public class RobotContainer {
         op.b().whileTrue(new ElevatorJiggleCommand(elevatorSubsystem));
 
         drivetrain.registerTelemetry(logger::telemeterize);
+
     }
 
     public Command getAutonomousCommand() {
         return autoChooser.getSelected();
     }
 
-    //function to drive to tag
-    void driveToTag(){
-        drivetrain.applyRequest(() -> drive.withVelocityX(-limelight_range_proportional())
-        .withVelocityY(-.5 * MaxSpeed*(.4))
-        .withRotationalRate(limelight_aim_proportional()));
-    }
+// function to drive towards the AprilTag, considering the Limelight's offset
+Command driveToTag() {
+    return drivetrain.applyRequest(() -> 
+        // Move the robot with corrected X velocity (compensating for the off-center camera)
+        drive.withVelocityX(0) // Only use range for X (forward/backward)
+            .withVelocityY(0)  // We won't use Y for correction, just driving forward
+            .withRotationalRate(limelight_aim_proportional() + limelight_x_offset_correction())  // Add offset correction to rotation
+    );
+}
 
-    // simple proportional turning control with Limelight.
-    // "proportional control" is a control algorithm in which the output is proportional to the error.
-    // in this case, we are going to return an angular velocity that is proportional to the 
-    // "tx" value from the Limelight.
-    double limelight_aim_proportional()
-    {    
-        // kP (constant of proportionality)
-        // this is a hand-tuned number that determines the aggressiveness of our proportional control loop
-        // if it is too high, the robot will oscillate.
-        // if it is too low, the robot will never reach its target
-        // if the robot never turns in the correct direction, kP should be inverted.
-        double kP = .0175;
+// Simple proportional turning control with Limelight.
+double limelight_aim_proportional() {    
+    double kP = 0.175; // Control constant for turning aggressiveness
 
-        // tx ranges from (-hfov/2) to (hfov/2) in degrees. If your target is on the rightmost edge of 
-        // your limelight 3 feed, tx should return roughly 31 degrees.
-        double targetingAngularVelocity = LimelightHelpers.getTX("limelight") * kP;
+    // Get the horizontal offset (tx) from the Limelight
+    double targetingAngularVelocity = LimelightHelpers.getTY("limelight") * kP;
 
-        // convert to radians per second for our drive method
-        targetingAngularVelocity *= MaxAngularRate;
+    // Scale the angular velocity to MaxAngularRate for controlling robot's rotation speed
+    targetingAngularVelocity *= MaxAngularRate;
 
-        //invert since tx is positive when the target is to the right of the crosshair
-        targetingAngularVelocity *= -1.0;
-        return targetingAngularVelocity;
-    }
+    // Invert the angular velocity since tx is positive when the target is to the right of the crosshair
+    targetingAngularVelocity *= -1.0;
 
-    // simple proportional ranging control with Limelight's "ty" value
-    // this works best if your Limelight's mount height and target mount height are different.
-    // if your limelight and target are mounted at the same or similar heights, use "ta" (area) for target ranging rather than "ty"
-    double limelight_range_proportional()
-    {    
-        double kP = .1;
-        double targetingForwardSpeed = LimelightHelpers.getTY("limelight") * kP;
-        targetingForwardSpeed *= MaxSpeed;
-        targetingForwardSpeed *= -1.0;
-        System.out.println(targetingForwardSpeed);
-        return targetingForwardSpeed;
-    }
+    return targetingAngularVelocity;
+}
+
+// Simple proportional control for range based on ty (vertical angle)
+double limelight_range_proportional() {    
+    double kP = 0.1;  // Proportional control constant for range
+    double targetingForwardSpeed = LimelightHelpers.getTY("limelight") * kP;
+    
+    // Adjust forward speed proportionally based on target distance
+    targetingForwardSpeed *= MaxSpeed;
+    
+    // Invert the forward speed to move toward the target (negative ty means farther away)
+    targetingForwardSpeed *= -1.0;
+
+    return targetingForwardSpeed;
+}
+
+// Compensation for the Limelight's 11.5-inch offset from the robot's center
+double limelight_x_offset_correction() {
+    double limelight_offset_in_inches = 11.5;  // Limelight offset in inches
+    double limelight_offset_scale = limelight_offset_in_inches / 12.0; // Convert to feet for scaling
+    double x_offset_correction = limelight_offset_scale * MaxSpeed; // Apply scaling to the robot's MaxSpeed
+
+    // This offset helps adjust the X direction to compensate for the off-center camera
+    return x_offset_correction;
+}
+
+
 }
