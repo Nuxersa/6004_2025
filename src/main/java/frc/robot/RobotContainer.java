@@ -42,6 +42,7 @@ import frc.robot.commands.PivotOut;
 import frc.robot.commands.GrabIn;
 import frc.robot.commands.GrabOut;
 import frc.robot.commands.ElevatorSetPos1;
+import frc.robot.commands.DriveToTag;
 
 
 public class RobotContainer {
@@ -126,6 +127,8 @@ public class RobotContainer {
                 .withRotationalRate(limelight_aim_proportional()))
         );
         
+        joystick.rightBumper().whileTrue(new DriveToTag());
+
         // move pivot
         op.povDown().whileTrue(new PivotIn(pivotSubsystem));
         op.povUp().whileTrue(new PivotOut(pivotSubsystem));
@@ -155,13 +158,10 @@ public class RobotContainer {
     }
 
 // function to drive towards the AprilTag, considering the Limelight's offset
-Command driveToTag() {
-    return drivetrain.applyRequest(() -> 
-        // Move the robot with corrected X velocity (compensating for the off-center camera)
-        drive.withVelocityX(0) // Only use range for X (forward/backward)
-            .withVelocityY(0)  // We won't use Y for correction, just driving forward
-            .withRotationalRate(limelight_aim_proportional() + limelight_x_offset_correction())  // Add offset correction to rotation
-    );
+void driveToTag() {
+    drivetrain.applyRequest(() -> drive.withVelocityX(-limelight_range_proportional())
+        .withVelocityY(-.5 * MaxSpeed*(.4))
+        .withRotationalRate(limelight_aim_proportional()));
 }
 
 // Simple proportional turning control with Limelight.
