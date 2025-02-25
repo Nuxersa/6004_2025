@@ -41,6 +41,7 @@ import frc.robot.commands.PivotIn;
 import frc.robot.commands.PivotOut;
 import frc.robot.commands.GrabIn;
 import frc.robot.commands.GrabOut;
+import frc.robot.commands.ElevatorSetPos1;
 
 
 public class RobotContainer {
@@ -106,6 +107,7 @@ public class RobotContainer {
             point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))
         ));
 
+
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
         joystick.back().and(joystick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
@@ -115,6 +117,14 @@ public class RobotContainer {
 
         // reset the field-centric heading on left bumper press
         joystick.y().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+
+        //drive to tag
+        joystick.rightBumper().whileTrue(
+                //lime light aim any april tag                
+                drivetrain.applyRequest(() -> drive.withVelocityX(-limelight_range_proportional())
+                .withVelocityY(-.5 * MaxSpeed*(.4))
+                .withRotationalRate(limelight_aim_proportional()))
+        );
         
         // move pivot
         op.povDown().whileTrue(new PivotIn(pivotSubsystem));
@@ -132,6 +142,9 @@ public class RobotContainer {
         op.rightTrigger(.05).whileTrue(new ElevatorDownCommand(elevatorSubsystem));
 
         op.b().whileTrue(new ElevatorJiggleCommand(elevatorSubsystem));
+
+        //PID elevator testing
+        joystick.x().whileTrue(new ElevatorSetPos1(elevatorSubsystem));
 
         drivetrain.registerTelemetry(logger::telemeterize);
 

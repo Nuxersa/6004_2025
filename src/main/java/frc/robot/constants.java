@@ -2,6 +2,7 @@ package frc.robot;
 
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import edu.wpi.first.math.util.Units;
 
 public class constants {
 
@@ -15,6 +16,19 @@ public class constants {
         public static final double LIFT_SPEED_UP = -0.5;
         public static final double LIFT_HOLD_DOWN = (0.5 * 0.05);
         public static final double LIFT_HOLD_UP = (0.5 * 0.05);
+
+        public static final double LIFT_HEIGHT_1 = .1;   //set point 1
+        public static final double LIFT_HEIGHT_2 = .2;   //set point 2
+        public static final double LIFT_HEIGHT_3 = .3;   //set point 3
+
+        public static final double   kElevatorGearing         = 12.0;
+        public static final double   kElevatorSproketTeeth    = 22;
+        public static final double   kElevatorPitch           = Units.inchesToMeters(0.25);
+        public static final double   kElevatorDrumRadius      = (kElevatorSproketTeeth * kElevatorPitch) / (2 * Math.PI);// radius = Circumference / (2 pi)
+        // Encoder is reset to measure 0 at the bottom, so minimum height is 0.
+        public static final double   kMinElevatorHeightMeters = Units.inchesToMeters(0);//min height / 10
+        public static final double   kMaxElevatorHeightMeters = Units.inchesToMeters(30);
+
       }
    
     public final class TalonFXConstants {
@@ -38,7 +52,7 @@ public class constants {
       public static final InvertedValue INTAKE_INVERSION = InvertedValue.Clockwise_Positive;
       public static final NeutralModeValue INTAKE_NEUTRAL_MODE = NeutralModeValue.Brake;
       public static final double INTAKE_POSITION_STATUS_FRAME = 0.05;
-      public static final double INTAKE_VELOCITY_STATUS_FRAME = 0.01;
+      public static final double INTAKE_VELOCITY_STATUS_FRAME = 0.01;      
   
   }
 }
