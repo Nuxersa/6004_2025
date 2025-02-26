@@ -4,14 +4,14 @@
 
 package frc.robot.commands;
 
-import frc.robot.constants.ElevatorConstants;
-import frc.robot.subsystems.Elevator;
+
+import frc.robot.constants.IntakeConstants;
+import frc.robot.subsystems.PivotSub;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
 /** An liftUpCommand that uses an lift subsystem. */
-public class ElevatorDownCommand extends Command {
-  private final Elevator m_elevator;
+public class PivotOut extends Command {
+  private final PivotSub m_intake;
 
   /**
    * Powers the lift up, when finished passively holds the lift up.
@@ -21,13 +21,10 @@ public class ElevatorDownCommand extends Command {
    *
    * @param lift The subsystem used by this command.
    */
-  public ElevatorDownCommand(Elevator lift) {
-    m_elevator = lift;
-    addRequirements(lift);
+  public PivotOut(PivotSub input) {
+    m_intake = input;
+    addRequirements(input);
   }
-
-    private final CommandXboxController op = new CommandXboxController(1);
-
 
   // Called when the command is initially scheduled.
   @Override
@@ -36,7 +33,7 @@ public class ElevatorDownCommand extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    m_elevator.moveElevator(ElevatorConstants.LIFT_SPEED_DOWN * op.getRightTriggerAxis());
+    m_intake.movePivot(-IntakeConstants.Pivot_SPEED);
   }
 
   // Called once the command ends or is interrupted.
@@ -44,7 +41,7 @@ public class ElevatorDownCommand extends Command {
   // When the next command is caled it will override this command
   @Override
   public void end(boolean interrupted) {
-    m_elevator.moveElevator(ElevatorConstants.LIFT_HOLD_DOWN);
+    m_intake.movePivot(IntakeConstants.Pivot_SPEED_HOLD);
   }
 
   // Returns true when the command should end.

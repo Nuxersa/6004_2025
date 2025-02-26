@@ -10,7 +10,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
 /** An liftUpCommand that uses an lift subsystem. */
-public class ElevatorDownCommand extends Command {
+public class ElevatorSetPos3 extends Command {
   private final Elevator m_elevator;
 
   /**
@@ -21,13 +21,12 @@ public class ElevatorDownCommand extends Command {
    *
    * @param lift The subsystem used by this command.
    */
-  public ElevatorDownCommand(Elevator lift) {
+  public ElevatorSetPos3(Elevator lift) {
     m_elevator = lift;
     addRequirements(lift);
   }
 
-    private final CommandXboxController op = new CommandXboxController(1);
-
+    private final CommandXboxController op = new CommandXboxController(0);
 
   // Called when the command is initially scheduled.
   @Override
@@ -36,15 +35,16 @@ public class ElevatorDownCommand extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    m_elevator.moveElevator(ElevatorConstants.LIFT_SPEED_DOWN * op.getRightTriggerAxis());
+    m_elevator.setPosition(ElevatorConstants.LIFT_HEIGHT_3);
+    //System.out.print("run pid elev");
   }
 
   // Called once the command ends or is interrupted.
-  // Here we run arm down at low speed to ensure it stays down
-  // When the next command is caled it will override this command
+  // Here we run a command that will hold the lift up after to ensure the lift does
+  // not drop due to gravity.
   @Override
   public void end(boolean interrupted) {
-    m_elevator.moveElevator(ElevatorConstants.LIFT_HOLD_DOWN);
+    m_elevator.moveElevator(ElevatorConstants.LIFT_HOLD_UP);
   }
 
   // Returns true when the command should end.

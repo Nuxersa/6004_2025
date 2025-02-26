@@ -14,7 +14,9 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
@@ -31,11 +33,28 @@ import frc.robot.util.LimelightHelpers;
 
 //Team Subsystems
 import frc.robot.subsystems.Elevator;
+import frc.robot.subsystems.PivotSub;
+import frc.robot.subsystems.GrabSub;
 import frc.robot.commands.ElevatorDownCommand;
+import frc.robot.commands.ElevatorJiggleCommand;
 import frc.robot.commands.ElevatorUpCommand;
+import frc.robot.commands.PivotIn;
+import frc.robot.commands.PivotOut;
+import frc.robot.commands.GrabIn;
+import frc.robot.commands.GrabOut;
+import frc.robot.commands.ElevatorSetPos1;
+import frc.robot.commands.ElevatorSetPos2;
+import frc.robot.commands.ElevatorSetPos3;
+import frc.robot.commands.ElevatorSetPos4;
+import frc.robot.commands.ElevatorSetPos5;
+
+import frc.robot.commands.DriveToTag;
+
 
 public class RobotContainer {
     public final Elevator elevatorSubsystem = new Elevator();
+    public final PivotSub pivotSubsystem = new PivotSub();
+    public final GrabSub grabSubsystem = new GrabSub();
 
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
@@ -65,6 +84,10 @@ public class RobotContainer {
         //smart dashboard for Auto paths
         autoChooser = AutoBuilder.buildAutoChooser("Tests");
         SmartDashboard.putData("Auto Mode", autoChooser);
+        SmartDashboard.putData(CommandScheduler.getInstance());
+        SmartDashboard.putData(elevatorSubsystem);
+        SmartDashboard.putData(pivotSubsystem);
+        SmartDashboard.putData(grabSubsystem);
 
         configureBindings();
     }
@@ -82,10 +105,11 @@ public class RobotContainer {
         // and Y is defined as to the left according to WPILib convention.
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
+
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-m_xspeedLimiter.calculate(joystick.getLeftY()) * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-m_yspeedLimiter.calculate(joystick.getLeftX()) * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(-m_rotLimiter.calculate(joystick.getRightX()) * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                drive.withVelocityX(-m_xspeedLimiter.calculate(joystick.getLeftY()) * MaxSpeed * .6) // Drive forward with negative Y (forward)
+                    .withVelocityY(-m_yspeedLimiter.calculate(joystick.getLeftX()) * MaxSpeed * .6) // Drive left with negative X (left)
+                    .withRotationalRate(-m_rotLimiter.calculate(joystick.getRightX()) * MaxAngularRate * .6) // Drive counterclockwise with negative X (left)
             )
         );
 
@@ -93,6 +117,7 @@ public class RobotContainer {
         joystick.b().whileTrue(drivetrain.applyRequest(() ->
             point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))
         ));
+
 
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
@@ -102,61 +127,93 @@ public class RobotContainer {
         joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
         // reset the field-centric heading on left bumper press
-        joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+        joystick.y().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+
+        //drive to tag
+        joystick.rightBumper().whileTrue(
+                //lime light aim any april tag                
+                drivetrain.applyRequest(() -> drive.withVelocityX(-limelight_range_proportional())
+                .withVelocityY(-.5 * MaxSpeed*(.4))
+                .withRotationalRate(limelight_aim_proportional()))
+        );
         
+        joystick.rightBumper().whileTrue(new DriveToTag());
+
+        // move pivot
+        op.povDown().whileTrue(new PivotIn(pivotSubsystem));
+        op.povUp().whileTrue(new PivotOut(pivotSubsystem));
+
+
+        //move Grab!
+        op.x().whileTrue(new GrabIn(grabSubsystem));
+        op.y().whileTrue(new GrabOut(grabSubsystem));
+    
+
+
         // move elevator
-        op.leftTrigger(.2).whileTrue(new ElevatorUpCommand(elevatorSubsystem));
-        op.rightTrigger(.2).whileTrue(new ElevatorDownCommand(elevatorSubsystem));
+        op.leftTrigger(.05).whileTrue(new ElevatorUpCommand(elevatorSubsystem));
+        op.rightTrigger(.05).whileTrue(new ElevatorDownCommand(elevatorSubsystem));
+
+
+        //PID elevator testing
+        joystick.povDown().whileTrue(new ElevatorSetPos1(elevatorSubsystem));
+        joystick.povUp().whileTrue(new ElevatorSetPos4(elevatorSubsystem));
+
 
         drivetrain.registerTelemetry(logger::telemeterize);
+
     }
 
     public Command getAutonomousCommand() {
         return autoChooser.getSelected();
     }
 
-    //function to drive to tag
-    void driveToTag(){
-        drivetrain.applyRequest(() -> drive.withVelocityX(-limelight_range_proportional())
+// function to drive towards the AprilTag, considering the Limelight's offset
+void driveToTag() {
+    drivetrain.applyRequest(() -> drive.withVelocityX(-limelight_range_proportional())
         .withVelocityY(-.5 * MaxSpeed*(.4))
         .withRotationalRate(limelight_aim_proportional()));
-    }
+}
 
-    // simple proportional turning control with Limelight.
-    // "proportional control" is a control algorithm in which the output is proportional to the error.
-    // in this case, we are going to return an angular velocity that is proportional to the 
-    // "tx" value from the Limelight.
-    double limelight_aim_proportional()
-    {    
-        // kP (constant of proportionality)
-        // this is a hand-tuned number that determines the aggressiveness of our proportional control loop
-        // if it is too high, the robot will oscillate.
-        // if it is too low, the robot will never reach its target
-        // if the robot never turns in the correct direction, kP should be inverted.
-        double kP = .0175;
+// Simple proportional turning control with Limelight.
+double limelight_aim_proportional() {    
+    double kP = 0.175; // Control constant for turning aggressiveness
 
-        // tx ranges from (-hfov/2) to (hfov/2) in degrees. If your target is on the rightmost edge of 
-        // your limelight 3 feed, tx should return roughly 31 degrees.
-        double targetingAngularVelocity = LimelightHelpers.getTX("limelight") * kP;
+    // Get the horizontal offset (tx) from the Limelight
+    double targetingAngularVelocity = LimelightHelpers.getTY("limelight") * kP;
 
-        // convert to radians per second for our drive method
-        targetingAngularVelocity *= MaxAngularRate;
+    // Scale the angular velocity to MaxAngularRate for controlling robot's rotation speed
+    targetingAngularVelocity *= MaxAngularRate;
 
-        //invert since tx is positive when the target is to the right of the crosshair
-        targetingAngularVelocity *= -1.0;
-        return targetingAngularVelocity;
-    }
+    // Invert the angular velocity since tx is positive when the target is to the right of the crosshair
+    targetingAngularVelocity *= -1.0;
 
-    // simple proportional ranging control with Limelight's "ty" value
-    // this works best if your Limelight's mount height and target mount height are different.
-    // if your limelight and target are mounted at the same or similar heights, use "ta" (area) for target ranging rather than "ty"
-    double limelight_range_proportional()
-    {    
-        double kP = .1;
-        double targetingForwardSpeed = LimelightHelpers.getTY("limelight") * kP;
-        targetingForwardSpeed *= MaxSpeed;
-        targetingForwardSpeed *= -1.0;
-        System.out.println(targetingForwardSpeed);
-        return targetingForwardSpeed;
-    }
+    return targetingAngularVelocity;
+}
+
+// Simple proportional control for range based on ty (vertical angle)
+double limelight_range_proportional() {    
+    double kP = 0.1;  // Proportional control constant for range
+    double targetingForwardSpeed = LimelightHelpers.getTY("limelight") * kP;
+    
+    // Adjust forward speed proportionally based on target distance
+    targetingForwardSpeed *= MaxSpeed;
+    
+    // Invert the forward speed to move toward the target (negative ty means farther away)
+    targetingForwardSpeed *= -1.0;
+
+    return targetingForwardSpeed;
+}
+
+// Compensation for the Limelight's 11.5-inch offset from the robot's center
+double limelight_x_offset_correction() {
+    double limelight_offset_in_inches = 11.5;  // Limelight offset in inches
+    double limelight_offset_scale = limelight_offset_in_inches / 12.0; // Convert to feet for scaling
+    double x_offset_correction = limelight_offset_scale * MaxSpeed; // Apply scaling to the robot's MaxSpeed
+
+    // This offset helps adjust the X direction to compensate for the off-center camera
+    return x_offset_correction;
+}
+
+
 }
