@@ -14,6 +14,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -78,6 +79,10 @@ public class RobotContainer {
         //smart dashboard for Auto paths
         autoChooser = AutoBuilder.buildAutoChooser("Tests");
         SmartDashboard.putData("Auto Mode", autoChooser);
+        SmartDashboard.putData(CommandScheduler.getInstance());
+        SmartDashboard.putData(elevatorSubsystem);
+        SmartDashboard.putData(pivotSubsystem);
+        SmartDashboard.putData(grabSubsystem);
 
         configureBindings();
     }
