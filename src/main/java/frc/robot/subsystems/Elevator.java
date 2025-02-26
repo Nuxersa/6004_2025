@@ -54,7 +54,7 @@ public class Elevator extends SubsystemBase {
 
         // PID values need tuning for your specific elevator
         encoder = elevatorMotor.getEncoder();
-        pid = new PIDController(0.1, 0, 0);
+        pid = new PIDController(1.75, 0, 0);
     }
 
     @Override

@@ -33,7 +33,7 @@ public class PivotOut extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    m_intake.movePivot(-IntakeConstants.INTAKE_SPEED);
+    m_intake.movePivot(-IntakeConstants.Pivot_SPEED);
   }
 
   // Called once the command ends or is interrupted.
@@ -41,7 +41,7 @@ public class PivotOut extends Command {
   // When the next command is caled it will override this command
   @Override
   public void end(boolean interrupted) {
-    m_intake.movePivot(IntakeConstants.INTAKE_SPEED_HOLD);
+    m_intake.movePivot(IntakeConstants.Pivot_SPEED_HOLD);
   }
 
   // Returns true when the command should end.

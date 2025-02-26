@@ -42,6 +42,11 @@ import frc.robot.commands.PivotOut;
 import frc.robot.commands.GrabIn;
 import frc.robot.commands.GrabOut;
 import frc.robot.commands.ElevatorSetPos1;
+import frc.robot.commands.ElevatorSetPos2;
+import frc.robot.commands.ElevatorSetPos3;
+import frc.robot.commands.ElevatorSetPos4;
+import frc.robot.commands.ElevatorSetPos5;
+
 import frc.robot.commands.DriveToTag;
 
 
@@ -97,9 +102,9 @@ public class RobotContainer {
             // Drivetrain will execute this command periodically
 
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-m_xspeedLimiter.calculate(joystick.getLeftY()) * MaxSpeed * 1) // Drive forward with negative Y (forward)
-                    .withVelocityY(-m_yspeedLimiter.calculate(joystick.getLeftX()) * MaxSpeed * 1) // Drive left with negative X (left)
-                    .withRotationalRate(-m_rotLimiter.calculate(joystick.getRightX()) * MaxAngularRate * 1) // Drive counterclockwise with negative X (left)
+                drive.withVelocityX(-m_xspeedLimiter.calculate(joystick.getLeftY()) * MaxSpeed * .6) // Drive forward with negative Y (forward)
+                    .withVelocityY(-m_yspeedLimiter.calculate(joystick.getLeftX()) * MaxSpeed * .6) // Drive left with negative X (left)
+                    .withRotationalRate(-m_rotLimiter.calculate(joystick.getRightX()) * MaxAngularRate * .6) // Drive counterclockwise with negative X (left)
             )
         );
 
@@ -144,10 +149,11 @@ public class RobotContainer {
         op.leftTrigger(.05).whileTrue(new ElevatorUpCommand(elevatorSubsystem));
         op.rightTrigger(.05).whileTrue(new ElevatorDownCommand(elevatorSubsystem));
 
-        op.b().whileTrue(new ElevatorJiggleCommand(elevatorSubsystem));
 
         //PID elevator testing
-        joystick.x().whileTrue(new ElevatorSetPos1(elevatorSubsystem));
+        joystick.povDown().whileTrue(new ElevatorSetPos1(elevatorSubsystem));
+        joystick.povUp().whileTrue(new ElevatorSetPos4(elevatorSubsystem));
+
 
         drivetrain.registerTelemetry(logger::telemeterize);
 
