@@ -6,9 +6,13 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.Optional;
+
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -47,6 +51,9 @@ import frc.robot.commands.ElevatorSetPos2;
 import frc.robot.commands.ElevatorSetPos3;
 import frc.robot.commands.ElevatorSetPos4;
 import frc.robot.commands.ElevatorSetPos5;
+import frc.robot.commands.ReefAlignCommand;
+import frc.robot.subsystems.vision.apriltag.AprilTagPose;
+import frc.robot.subsystems.vision.apriltag.impl.limelight.LimelightAprilTagSystem;
 
 import frc.robot.commands.DriveToTag;
 
@@ -59,6 +66,9 @@ public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
     
+    @Logged(name = "Vision/Limelight")
+    public final LimelightAprilTagSystem reefCamera;
+    public ReefAlignCommand alignToReef;
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
@@ -88,7 +98,13 @@ public class RobotContainer {
         SmartDashboard.putData(elevatorSubsystem);
         SmartDashboard.putData(pivotSubsystem);
         SmartDashboard.putData(grabSubsystem);
-
+        reefCamera = new LimelightAprilTagSystem("limelight", drivetrain);
+        alignToReef =
+                new ReefAlignCommand(
+                        drivetrain,
+                        reefCamera,
+                        joystick::getLeftY,
+                        joystick::getLeftX);
         configureBindings();
     }
 
@@ -100,9 +116,23 @@ public class RobotContainer {
     private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(3);
     private final SlewRateLimiter m_elev = new SlewRateLimiter(4);
 
+    public void updateVision() {
+        Optional<AprilTagPose> aprilTagPoseOpt = reefCamera.getEstimatedPose();
+
+        if (aprilTagPoseOpt.isPresent()) {
+            AprilTagPose pose = aprilTagPoseOpt.get();
+
+            if (pose.getNumTags() > 0) {
+                drivetrain.setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 9999999));
+                drivetrain.addVisionMeasurement(pose.getEstimatedRobotPose(), pose.getTimestamp());
+            }
+        }
+    }
+
     private void configureBindings() {
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
+        
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
 
@@ -137,7 +167,8 @@ public class RobotContainer {
                 .withRotationalRate(limelight_aim_proportional()))
         );
         
-        joystick.rightBumper().whileTrue(new DriveToTag());
+        //joystick.rightBumper().whileTrue(new DriveToTag());
+        joystick.leftTrigger().whileTrue(alignToReef);
 
         // move pivot
         op.povDown().whileTrue(new PivotIn(pivotSubsystem));
