@@ -23,11 +23,36 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
+
+//photon
+import java.util.Optional;
+import java.util.function.Supplier;
+
+import org.photonvision.EstimatedRobotPose;
+import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.PhotonPoseEstimator.PoseStrategy;
+import org.photonvision.estimation.VisionEstimation;
+import org.photonvision.proto.Photon;
+import org.photonvision.targeting.PhotonPipelineResult;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.util.Units;
+import frc.robot.constants.VisionConstants;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -38,6 +63,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private Notifier m_simNotifier = null;
     private double m_lastSimTime;
 
+     private Field2d field = new Field2d();
+
     /** Swerve request to apply during robot-centric path following */
     private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds();
 
@@ -47,6 +74,20 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private static final Rotation2d kRedAlliancePerspectiveRotation = Rotation2d.k180deg;
     /* Keep track if we've ever applied the operator perspective before or not */
     private boolean m_hasAppliedOperatorPerspective = false;
+
+    // PHOTONVISION STUFF
+    private final PhotonCamera camera = new PhotonCamera(VisionConstants.CAM_NAME);
+    private final PhotonPoseEstimator visionEstimator = new PhotonPoseEstimator(
+        AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape), 
+        PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, 
+        new Transform3d(
+            new Translation3d(
+                Units.inchesToMeters(.25), 
+                Units.inchesToMeters(0.125), 
+                Units.inchesToMeters(7.5)),
+            new Rotation3d(0, Units.degreesToRadians(5), 0)
+        )
+    );
 
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
@@ -226,6 +267,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return m_sysIdRoutineToApply.dynamic(direction);
     }
 
+    public PhotonCamera getFrontCamera() {
+        return camera;
+    }
+
     @Override
     public void periodic() {
         /*
@@ -245,6 +290,24 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 m_hasAppliedOperatorPerspective = true;
             });
         }
+        /*
+         * PROVEN:
+         * CAMERA IS DETECTING AND REPORTING TAG DATA
+         * 3D IS CALIBRATED
+         */
+        var latestResults = camera.getAllUnreadResults();
+        for(PhotonPipelineResult result : latestResults) {
+            Optional<EstimatedRobotPose> poseData = visionEstimator.update(result);
+            System.out.println(poseData.isPresent());
+            if (poseData.isPresent()) {
+                EstimatedRobotPose estimatedPose = poseData.get();
+                System.out.println("processing pose at " + estimatedPose.timestampSeconds);
+                System.out.println(estimatedPose.estimatedPose.toPose2d());
+                addVisionMeasurement(estimatedPose.estimatedPose.toPose2d(), Utils.getCurrentTimeSeconds());
+            }
+        }    
+        field.setRobotPose(getState().Pose);
+        SmartDashboard.putData(field);
     }
 
     private void startSimThread() {

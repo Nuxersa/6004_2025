@@ -54,7 +54,7 @@ import frc.robot.commands.ElevatorSetPos5;
 import frc.robot.commands.ReefAlignCommand;
 import frc.robot.subsystems.vision.apriltag.AprilTagPose;
 import frc.robot.subsystems.vision.apriltag.impl.limelight.LimelightAprilTagSystem;
-
+import frc.robot.commands.AlignToTagCommand;
 import frc.robot.commands.DriveToTag;
 
 
@@ -168,7 +168,17 @@ public class RobotContainer {
         );
         
         //joystick.rightBumper().whileTrue(new DriveToTag());
-        joystick.leftTrigger().whileTrue(alignToReef);
+        //joystick.leftTrigger().whileTrue(alignToReef);
+        joystick.leftTrigger().whileTrue(
+            new AlignToTagCommand(
+                drivetrain, 
+                drivetrain.getFrontCamera(), 
+                0, 
+                0, 
+                0, 
+                12
+                )
+            );
 
         // move pivot
         op.povDown().whileTrue(new PivotIn(pivotSubsystem));
