@@ -23,6 +23,9 @@ public class constants {
         public static final double LIFT_HEIGHT_4 = 1.55;   //set point 4 is Shallow Climb
         public static final double LIFT_HEIGHT_5 = 0;   //set point 5 is max
 
+        public static final double PIVOT_EXTEND_0 = 0;   //Completley in
+        public static final double PIVOT_EXTEND_1 = 0.5;   //Pivot to drop coral / pivot out
+
         public static final double   kElevatorGearing         = 12.0;
         public static final double   kElevatorSproketTeeth    = 22;
         public static final double   kElevatorPitch           = Units.inchesToMeters(0.25);

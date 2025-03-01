@@ -29,8 +29,25 @@ public class PivotSub extends SubsystemBase {
 
         intakePivotConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         intakePivotConfiguration.CurrentLimits.SupplyCurrentLimit = 55;
-        intakePivotConfiguration.CurrentLimits.SupplyCurrentLimitEnable = true;
+        intakePivotConfiguration.CurrentLimits.SupplyCurrentLimitEnable = true; 
+        // in init function, set slot 0 gains
+        var slot0Configs = new TalonFXConfiguration.Slot0Configs();
+        slot0Configs.kP = 2.4; // An error of 1 rotation results in 2.4 V output
+        slot0Configs.kI = 0; // no output for integrated error
+        slot0Configs.kD = 0.1; // A velocity of 1 rps results in 0.1 V output
 
+        intakePivot.getConfigurator().apply(slot0Configs);
+
+        //getConfigurator().apply(slot0Configs);
+
+        intakePivot.getConfigurator().apply(intakePivotConfiguration);
+        // Set the initial position to zero
+        intakePivot.setSelectedSensorPosition(0);
+
+        // Method to set the desired position of the pivot arm
+        //public void setPivotPosition(double position) {
+        //    intakePivot.set(ControlMode.Position, position);
+        //}
     }
 
     @Override
